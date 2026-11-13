@@ -1,4 +1,3 @@
-
 from drafter import *
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -89,10 +88,10 @@ def get_recommendation(state):
 def navigation_buttons():
     return [
         Button("Dashboard", "to_dashboard"),
-        Button("Calendar", "to_calendar"),
         Button("All Assignments", "all_assignments"),
+        Button("Incomplete Assignments", "show_uncomplete"),
         Button("Add Assignment", "add_assignment"),
-        Button("Incomplete", "show_uncomplete")
+        "\n"
     ]
 
 
@@ -112,9 +111,9 @@ def to_dashboard(state: State) -> Page:
 
     content = [
         Header("Student Assignment Organizer"),
-        "Welcome to your assignment dashboard!",
-        "Today: " + state.current_date,
-        "Current time: " + state.current_time,
+        "Welcome to your assignment dashboard! \n",
+        "Currrent time: " + state.current_date,
+        " at " + state.current_time,
         HorizontalRule()
     ]
 
@@ -123,10 +122,10 @@ def to_dashboard(state: State) -> Page:
     content.append(Header("Your Assignments"))
 
     if len(state.assignments) == 0:
-        content.append("You have not added any assignments yet.")
+        content.append("You have not added any assignments yet.\n")
     else:
         content.append(
-            "Total assignments: " + str(len(state.assignments))
+            "Total assignments:" + str(len(state.assignments)) + "\n"
         )
 
         upcoming = sorted_assignments(state)
@@ -134,7 +133,7 @@ def to_dashboard(state: State) -> Page:
         # Show up to three upcoming assignments.
         for assignment in upcoming[:3]:
             content.append(
-                assignment.name + " - Due: " + assignment.due_date
+                assignment.name + " - Due: " + assignment.due_date + "\n"
             )
 
         content.append(Header("What Should I Do Next?"))
@@ -142,7 +141,7 @@ def to_dashboard(state: State) -> Page:
         recommendation = get_recommendation(state)
 
         if recommendation == None:
-            content.append("You have completed all your assignments!")
+            content.append("You have completed all your assignments!\n")
         else:
             content.append(
                 "Recommended: " + recommendation.name
@@ -154,7 +153,7 @@ def to_dashboard(state: State) -> Page:
                 "| Difficulty: " + str(recommendation.difficulty)
             )
             content.append(
-                "| Due: " + recommendation.due_date
+                "| Due: " + recommendation.due_date + "\n"
             )
 
         completed_count = 0
@@ -164,52 +163,11 @@ def to_dashboard(state: State) -> Page:
                 completed_count += 1
 
         content.append(
-            "| Completed: " + str(completed_count)
+            "Completed: " + str(completed_count)
             + " out of " + str(len(state.assignments))
         )
 
-    content.append(Button("View All Assignments", "all_assignments"))
-    content.append(Button("Add an Assignment", "add_assignment"))
-
     return Page(state, content)
-
-
-# -----------------------------------
-# CALENDAR
-# -----------------------------------
-
-@route
-def to_calendar(state: State) -> Page:
-    content = [
-        Header("Assignment Calendar"),
-        "Assignments organized by their due dates.",
-        HorizontalRule()
-    ]
-
-    content.extend(navigation_buttons())
-
-    if len(state.assignments) == 0:
-        content.append("There are no assignments to display.")
-    else:
-        assignments = sorted_assignments(state)
-
-        for assignment in assignments:
-            content.append(
-                assignment.due_date + " - " + assignment.name
-            )
-            content.append(
-                "Course: " + assignment.course
-            )
-
-            if assignment.completed:
-                content.append("Status: Completed")
-            else:
-                content.append("Status: Incomplete")
-
-            content.append(HorizontalRule())
-
-    return Page(state, content)
-
 
 # -----------------------------------
 # ALL ASSIGNMENTS
@@ -241,13 +199,13 @@ def all_assignments(state: State) -> Page:
 
         content.append(Header(assignment.name))
         content.append("Course: " + assignment.course)
-        content.append("Due date: " + assignment.due_date)
+        content.append("| Due date: " + assignment.due_date + "\n")
         content.append("Difficulty: " + str(assignment.difficulty))
 
         if assignment.completed:
-            content.append("Status: Completed")
+            content.append("| Status: Completed \n")
         else:
-            content.append("Status: Incomplete")
+            content.append("| Status: Incomplete \n")
 
         content.append(
             Button(
@@ -308,17 +266,18 @@ def add_assignment(state: State) -> Page:
         "Assignment name:",
         TextBox("assignment_name"),
 
-        "Course:",
+        "\nCourse:",
         TextBox("course"),
 
-        "Difficulty:",
+        "\nDifficulty:",
         SelectBox("difficulty", ["1", "2", "3"]),
 
-        "Due date:",
+        "\nDue date:",
         DateInput("due_date"),
 
-        "Already completed?",
+        "\nAlready completed?",
         CheckBox("completed"),
+        "\n",
 
         Button("Save Assignment", "save_assignment")
     ])
@@ -473,13 +432,14 @@ def show_uncomplete(state: State) -> Page:
             days_left = days_until_due(assignment)
 
             if days_left < 0:
-                content.append("Status: Overdue")
+                content.append("Status: Overdue by " + str(abs(days_left)) + " days")
             elif days_left == 0:
                 content.append("Status: Due Today")
-            elif days_left <= 3:
-                content.append("Status: Due Soon")
+            elif days_left == 1:
+                content.append("Status: Due Tommorrow")
             else:
-                content.append("Status: Upcoming")
+                content.append("Status: Due in " + str(days_left) + " days")
+    
 
             content.append(HorizontalRule())
 
