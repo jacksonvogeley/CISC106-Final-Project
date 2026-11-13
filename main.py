@@ -51,7 +51,10 @@ def find_assignment(state, assignment_number):
 
 def sorted_assignments(state):
     """Return assignments sorted by due date."""
-    return sorted(state.assignments, key=lambda item: item.due_date)
+    return sorted(
+        state.assignments,
+        key=get_due_date
+    )
 
 
 def days_until_due(assignment):
@@ -59,6 +62,14 @@ def days_until_due(assignment):
     due = date.fromisoformat(assignment.due_date)
     today = date.today()
     return (due - today).days
+
+
+def get_due_date(assignment):
+    return assignment.due_date
+
+
+def get_difficulty(assignment):
+    return assignment.difficulty
 
 
 def get_recommendation(state):
@@ -72,15 +83,8 @@ def get_recommendation(state):
     if len(unfinished) == 0:
         return None
 
-    # Sort by deadline first.
-    unfinished.sort(key=lambda item: item.due_date)
-
-    # If two assignments have the same deadline,
-    # put the harder one first.
-    unfinished.sort(
-        key=lambda item: item.difficulty,
-        reverse=True
-    )
+    unfinished.sort(key=get_difficulty, reverse=True)
+    unfinished.sort(key=get_due_date)
 
     return unfinished[0]
 
@@ -424,22 +428,23 @@ def show_uncomplete(state: State) -> Page:
     for assignment in sorted_assignments(state):
         if assignment.completed == False:
             found_assignment = True
-
+            
             content.append(Header(assignment.name))
             content.append("Course: " + assignment.course)
-            content.append("Due: " + assignment.due_date)
+            content.append("| Due: " + assignment.due_date + "\n")
+            content.append("Difficulty: " + str(assignment.difficulty))
 
             days_left = days_until_due(assignment)
 
             if days_left < 0:
-                content.append("Status: Overdue by " + str(abs(days_left)) + " days")
+                content.append("| Status: Overdue by " + str(abs(days_left)) + " days\n")
             elif days_left == 0:
-                content.append("Status: Due Today")
+                content.append("| Status: Due Today\n")
             elif days_left == 1:
-                content.append("Status: Due Tommorrow")
+                content.append("| Status: Due Tommorrow\n")
             else:
-                content.append("Status: Due in " + str(days_left) + " days")
-    
+                content.append("| Status: Due in " + str(days_left) + " days\n")
+                
 
             content.append(HorizontalRule())
 
